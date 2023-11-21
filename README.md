@@ -1,124 +1,134 @@
-# Modulo Hospital
+# Consultas Ejercicio - Modulo Hospital
 
-## Enunciado
+### 1. Obtener el nombre del empleado que trabaja en el piso con id 3.
 
-Se desea construir una base de datos que almacene todos los  datos de una mega-clínica de la ciudad. Se debe manejar los datos de habitaciones por piso, cada piso maneja varias especialidades, pero tiene una especialidad principal. La estructura de la clínica maneja varios edificios en el complejo hospitalario. De los pisos se quiere guardar, un código de piso, nombre de la enfermera jefe a cargo, y el edificio en que está. De las habitaciones se desea guardar, el código, la cantidad de camas y el Piso al que pertenece.
+```sql
+SELECT e.nombreEmpleado FROM empleado e
+JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
+WHERE p.idPisoEdificio = 3;
+```
 
-## Consultas
+### 2. Mostrar el nombre y la especialidad de los pisos principales.
 
-1. Obtener el nombre del empleado que trabaja en el piso con id 3.
+```sql
+SELECT e.nombreEspecialidad FROM especialidad e
+JOIN pisoespecialidad p ON e.idEspecialidad = p.idEspecialidad
+WHERE p.estado = "principal";
+```
 
-    ```SQL
-    SELECT e.nombreEmpleado FROM empleado e
-    JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
-    WHERE p.idPisoEdificio = 3;
-    ```
+### 3. Obtener el nombre del complejo hospitalario al que pertenece el edificio con id 5.
 
-2. Mostrar el nombre y la especialidad de los pisos principales.
+```sql
+SELECT c.nombreComplejo FROM complejohospitalario c
+JOIN edificio e ON c.idComplejoHospitalario = e.idComplejoHospitalario
+WHERE e.idEdificio = 5;
+```
 
-    ```SQL
-    SELECT e.nombreEspecialidad FROM especialidad e
-    JOIN pisoespecialidad p ON e.idEspecialidad = p.idEspecialidad
-    WHERE p.estado = "principal";
-    ```
+### 4. Mostrar el nombre y la cantidad de camas de las habitaciones en el piso con id 8.
 
-3. Obtener el nombre del complejo hospitalario al que pertenece el edificio con id 5.
+```sql
+SELECT p.nroPiso AS ubicacion_piso, SUM(h.camas) FROM piso p
+JOIN habitacion h ON p.idPisoEdificio = h.idPisoEdificio
+WHERE p.idPisoEdificio = 8;
+```
 
-    ```SQL
-    SELECT c.nombreComplejo FROM complejohospitalario c
-    JOIN edificio e ON c.idComplejoHospitalario = e.idComplejoHospitalario
-    WHERE e.idEdificio = 5;
-    ```
+### 5. Obtener el nombre del empleado que trabaja en el edificio con id 6.
 
-4. Mostrar la ubicacion y la cantidad de camas de las habitaciones en el piso con id 8.
+```sql
+SELECT e.nombreEmpleado FROM empleado e
+JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
+WHERE p.idEdificio = 6;
+```
 
-    ```SQL
-    SELECT p.nroPiso AS ubicacion_piso, SUM(h.camas) FROM piso p
-    JOIN habitacion h ON p.idPisoEdificio = h.idPisoEdificio
-    WHERE p.idPisoEdificio = 8;
-    ```
+### 6. Mostrar el nombre de las especialidades en el piso principal del edificio con id 3.
 
-5. Obtener el nombre del empleado que trabaja en el edificio con id 6.
+```sql
+SELECT ed.nombreEdificio, p.nroPiso AS ubicacion_piso, SUM(h.camas) AS camas FROM edificio ed
+JOIN piso p ON ed.idEdificio = p.idEdificio
+JOIN habitacion h ON p.idPisoEdificio = h.idPisoEdificio
+JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
+WHERE pe.estado = "principal" AND ed.idEdificio = 2;
+```
 
-    ```SQL
-    SELECT e.nombreEmpleado FROM empleado e
-    JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
-    JOIN edificio ed ON p.idEdificio = ed.idEdificio
-    WHERE ed.idEdificio = 6;
-    ```
+### 7. Obtener el nombre y el cargo de los empleados que trabajan en el edificio con id 7.
 
-6. Mostrar el nombre de las especialidades en el piso principal del edificio con id 3.
+```sql
+SELECT e.nombreEmpleado, e.cargo FROM empleado e
+JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
+WHERE p.idEdificio = 7;
+```
 
-    ```SQL
-    SELECT e.nombreEspecialidad FROM especialidad e
-    JOIN pisoespecialidad pe ON e.idEspecialidad = pe.idEspecialidad
-    JOIN piso p ON pe.idPisoEdificio = p.idPisoEdificio
-    JOIN edificio ed ON p.idEdificio = ed.idEdificio
-    WHERE pe.estado = "principal" AND ed.idEdificio = 3;
-    ```
+### 8. Mostrar el nombre y la ubicación de los pisos con más de 15 camas.
 
-7. Obtener el nombre y el cargo de los empleados que trabajan en el edificio con id 7.
+```sql
+SELECT p.idPisoEdificio, p.nroPiso AS ubicacion_piso, SUM(h.camas) FROM habitacion h
+JOIN piso p ON h.idPisoEdificio = p.idPisoEdificio
+GROUP BY p.idPisoEdificio
+HAVING SUM(h.camas) > 15;
+```
 
-    ```SQL
-    SELECT e.nombreEmpleado, e.cargo FROM empleado e
-    JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
-    JOIN edificio ed ON p.idEdificio = ed.idEdificio
-    WHERE ed.idEdificio = 7;
-    ```
+### 9. Obtener el nombre del complejo hospitalario que tiene el mayor número de edificios.
 
-8. Mostrar el nombre y la ubicación de los pisos con más de 15 camas.
+```sql
+SELECT c.nombreComplejo FROM complejohospitalario c
+JOIN edificio e ON c.idComplejoHospitalario = e.idComplejoHospitalario
+GROUP BY c.idComplejoHospitalario
+ORDER BY COUNT(*) DESC
+LIMIT 1;
+```
 
-    ```SQL
-    SELECT p.idPisoEdificio, p.nroPiso AS ubicacion_piso, SUM(h.camas) FROM habitacion h
-    JOIN piso p ON h.idPisoEdificio = p.idPisoEdificio
-    GROUP BY p.idPisoEdificio
-    HAVING SUM(h.camas) > 15;
-    ```
+### 10. Mostrar el nombre y la especialidad de los empleados que trabajan en el piso principal del edificio con id 1.
 
-9. Obtener el nombre del complejo hospitalario que tiene el mayor número de edificios.
+```sql
+SELECT e.nombreEmpleado, e.cargo, es.nombreEspecialidad  FROM empleado e
+JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
+JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
+JOIN especialidad es ON pe.idEspecialidad = es.idEspecialidad
+WHERE p.idEdificio = 1;
+```
 
-    ```SQL
-    SELECT c.nombreComplejo FROM complejohospitalario c
-    JOIN edificio e ON c.idComplejoHospitalario = e.idComplejoHospitalario
-    GROUP BY c.idComplejoHospitalario
-    ORDER BY COUNT(*) DESC
-    LIMIT 1;
-    ```
+### 11. Obtener el nombre y la ubicación de los pisos donde trabaja un "Fisioterapeuta".
 
-10. Mostrar el nombre y el cargo de los empleados que trabajan en el piso principal del edificio con id 1.
+```sql
+SELECT ed.nombreEdificio, p.nroPiso AS ubicacion_piso FROM empleado e, piso p, edificio ed
+WHERE e.idEmpleado = p.idEmpleadoJefe
+AND p.idEdificio = ed.idEdificio
+AND e.cargo = 'fisioterapeuta';
+```
 
-    ```SQL
-    SELECT e.nombreEmpleado, e.cargo, es.nombreEspecialidad  FROM empleado e
-    JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
-    JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
-    JOIN especialidad es ON pe.idEspecialidad = es.idEspecialidad
-    JOIN edificio ed ON p.idEdificio = ed.idEdificio
-    WHERE ed.idEdificio = 1;
-    ```
+### 12. Mostrar el nombre y el cargo de los empleados que trabajan en más de un piso. 
 
-11. Obtener el nombre y la ubicación de los pisos donde trabaja un "Jefe".
+```sql
+SELECT e.nombreEmpleado, e.cargo FROM empleado e
+WHERE (
+	SELECT COUNT(*) FROM piso p
+	WHERE p.idEmpleadoJefe = e.idEmpleado
+) > 1;
+```
 
-    ```SQL
-    
-    ```
+### 13. Obtener el nombre y la cantidad de camas de las habitaciones en el piso principal del edificio con id 2.
 
-12. Mostrar el nombre y el cargo de los empleados que trabajan en más de un piso.
+```sql
+SELECT ed.nombreEdificio, p.nroPiso AS ubicacion_piso, SUM(h.camas) AS camas FROM edificio ed
+JOIN piso p ON ed.idEdificio = p.idEdificio
+JOIN habitacion h ON p.idPisoEdificio = h.idPisoEdificio
+JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
+WHERE pe.estado = "principal" AND ed.idEdificio = 2;
+```
 
-    ```SQL
-    
-    ```
+### 14. Mostrar el nombre del complejo hospitalario que tiene al menos un edificio sin asignación de empleados.
 
-13. Obtener el nombre y la cantidad de camas de las habitaciones en el piso principal del edificio con id 2.
+```sql
+SELECT DISTINCT ch.nombreComplejo FROM complejoHospitalario ch
+JOIN edificio ed ON ch.idComplejoHospitalario = ed.idComplejoHospitalario
+LEFT JOIN piso p ON ed.idEdificio = p.idEdificio
+LEFT JOIN empleado e ON p.idEmpleadoJefe = e.idEmpleado
+WHERE p.idEdificio IS NULL OR e.idEmpleado IS NULL;
+```
 
-    ```SQL
-    
-    ```
+## Modelo fisico
 
-14. Mostrar el nombre del complejo hospitalario que tiene al menos un edificio sin asignación de empleados.
-
-    ```SQL
-    
-    ```
+![](./modelo-fisico.png)
 
 ## Uso del Proyecto
 
