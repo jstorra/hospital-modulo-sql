@@ -29,7 +29,8 @@ WHERE e.idEdificio = 5;
 #### 4. Mostrar el nombre y la cantidad de camas de las habitaciones en el piso con id 8.
 
 ```SQL
-SELECT p.nroPiso AS ubicacion_piso, SUM(h.camas) FROM piso p
+SELECT ed.nombreEdificio, IFNULL(SUM(h.camas), 0) AS camas FROM edificio ed
+JOIN piso p ON ed.idEdificio = p.idEdificio
 JOIN habitacion h ON p.idPisoEdificio = h.idPisoEdificio
 WHERE p.idPisoEdificio = 8;
 ```
@@ -63,9 +64,10 @@ WHERE p.idEdificio = 7;
 #### 8. Mostrar el nombre y la ubicación de los pisos con más de 15 camas.
 
 ```SQL
-SELECT p.idPisoEdificio, p.nroPiso AS ubicacion_piso, SUM(h.camas) FROM habitacion h
-JOIN piso p ON h.idPisoEdificio = p.idPisoEdificio
-GROUP BY p.idPisoEdificio
+SELECT ed.nombreEdificio, p.nroPiso, SUM(h.camas) AS camas FROM edificio ed
+JOIN piso p ON ed.idEdificio = p.idEdificio
+JOIN habitacion h ON p.idPisoEdificio = h.idPisoEdificio
+GROUP BY ed.nombreEdificio
 HAVING SUM(h.camas) > 15;
 ```
 
@@ -111,7 +113,7 @@ WHERE (
 #### 13. Obtener el nombre y la cantidad de camas de las habitaciones en el piso principal del edificio con id 2.
 
 ```SQL
-SELECT ed.nombreEdificio, p.nroPiso AS ubicacion_piso, SUM(h.camas) AS camas FROM edificio ed
+SELECT ed.nombreEdificio, SUM(h.camas) AS camas FROM edificio ed
 JOIN piso p ON ed.idEdificio = p.idEdificio
 JOIN habitacion h ON p.idPisoEdificio = h.idPisoEdificio
 JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
@@ -135,13 +137,22 @@ WHERE p.idEdificio IS NULL OR e.idEmpleado IS NULL;
 ```SQL
 DELIMITER //
 DROP PROCEDURE IF EXISTS asignarEmpleadoPiso //
-CREATE PROCEDURE asignarEmpleadoPiso(
-	in idPiso INT,
-	in idEmpleado INT
-)
+CREATE PROCEDURE asignarEmpleadoPiso(in idPiso INT, in idEmpleado INT)
 BEGIN
-	UPDATE piso SET idEmpleadoJefe = idEmpleado WHERE idPisoEdificio = idPiso;
-    SELECT * FROM piso;
+    SET @pisoExiste = (SELECT idPisoEdificio FROM piso WHERE idPisoEdificio = idPiso);
+    SET @empleadoExiste = (SELECT idEmpleado FROM empleado WHERE empleado.idEmpleado = idEmpleado);
+    IF ISNULL(@pisoExiste) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El piso no existe :(';
+    ELSE
+        IF ISNULL(@empleadoExiste) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El empleado no existe :(';
+        ELSE
+            UPDATE piso SET idEmpleadoJefe = idEmpleado WHERE idPisoEdificio = idPiso;
+            SELECT * FROM piso;
+        END IF;
+    END IF;
 END //
 DELIMITER ;
 call asignarEmpleadoPiso(1, 1);
@@ -214,7 +225,7 @@ call eliminacionEmpleadoPiso(3);
         WHERE es.nombreEspecialidad = especialidad;
     END //
     DELIMITER ;
-    call empleadosSegunEspecialidad("ortopedia");
+    call empleadosSegunEspecialidad("Medicina de Precisión y Genómica");
     ```
 
 - **Por id:**
@@ -251,7 +262,7 @@ call eliminacionEmpleadoPiso(3);
         WHERE ch.nombreComplejo = complejo;
     END //
     DELIMITER ;
-    call numEdificiosComplejo("Ultrices Posuere Consulting");
+    call numEdificiosComplejo("Vitality Health Village");
     ```
 
 - **Por id:**
@@ -284,7 +295,7 @@ BEGIN
 	WHERE e.cargo = cargo;
 END //
 DELIMITER ;
-call pisosCargoEmpleado("enfermera");
+call pisosCargoEmpleado("Pediatra");
 ```
 
 #### 8. Crear un procedimiento almacenado que asigne una especialidad a un piso específico.
