@@ -240,7 +240,7 @@ call eliminacionEmpleadoPiso(3);
         ELSE
             SELECT e.* FROM empleado e
             JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
-            JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
+            JOIN pisoEspecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
             JOIN especialidad es ON pe.idEspecialidad = es.idEspecialidad
             WHERE es.nombreEspecialidad = especialidad;
         END IF;
@@ -264,7 +264,7 @@ call eliminacionEmpleadoPiso(3);
         ELSE
             SELECT e.* FROM empleado e
             JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
-            JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
+            JOIN pisoEspecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
             WHERE pe.idEspecialidad = idEspecialidad;
         END IF;
     END //
@@ -303,7 +303,7 @@ call eliminacionEmpleadoPiso(3);
     DROP PROCEDURE IF EXISTS numEdificiosComplejo //
     CREATE PROCEDURE numEdificiosComplejo(in idComplejo INT)
     BEGIN
-        SET @complejoExiste = (SELECT idComplejoHospitalario FROM complejohospitalario
+        SET @complejoExiste = (SELECT idComplejoHospitalario FROM complejoHospitalario
                                WHERE idComplejoHospitalario = idComplejo);
         IF ISNULL(@complejoExiste) THEN
             SIGNAL SQLSTATE '45000'
@@ -360,9 +360,9 @@ BEGIN
                 SIGNAL SQLSTATE '45000'
                 SET MESSAGE_TEXT = 'La especialidad no existe :(';
             ELSE
-                UPDATE pisoespecialidad pe SET pe.idEspecialidad = idEspecialidad
+                UPDATE pisoEspecialidad pe SET pe.idEspecialidad = idEspecialidad
                 WHERE pe.estado = estado AND pe.idPisoEdificio = idPiso;
-                SELECT * FROM pisoespecialidad;
+                SELECT * FROM pisoEspecialidad;
             END IF;
         END IF;
     END IF;
