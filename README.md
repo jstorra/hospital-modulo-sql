@@ -14,14 +14,14 @@ WHERE p.idPisoEdificio = 3;
 
 ```SQL
 SELECT e.nombreEspecialidad FROM especialidad e
-JOIN pisoespecialidad p ON e.idEspecialidad = p.idEspecialidad
+JOIN pisoEspecialidad p ON e.idEspecialidad = p.idEspecialidad
 WHERE p.estado = "principal";
 ```
 
 #### 3. Obtener el nombre del complejo hospitalario al que pertenece el edificio con id 5.
 
 ```SQL
-SELECT c.nombreComplejo FROM complejohospitalario c
+SELECT c.nombreComplejo FROM complejoHospitalario c
 JOIN edificio e ON c.idComplejoHospitalario = e.idComplejoHospitalario
 WHERE e.idEdificio = 5;
 ```
@@ -49,8 +49,9 @@ WHERE p.idEdificio = 6;
 SELECT ed.nombreEdificio, p.nroPiso AS ubicacion_piso, SUM(h.camas) AS camas FROM edificio ed
 JOIN piso p ON ed.idEdificio = p.idEdificio
 JOIN habitacion h ON p.idPisoEdificio = h.idPisoEdificio
-JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
-WHERE pe.estado = "principal" AND ed.idEdificio = 2;
+JOIN pisoEspecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
+WHERE pe.estado = "principal" AND ed.idEdificio = 2
+GROUP BY ed.nombreEdificio, p.nroPiso;
 ```
 
 #### 7. Obtener el nombre y el cargo de los empleados que trabajan en el edificio con id 7.
@@ -67,14 +68,14 @@ WHERE p.idEdificio = 7;
 SELECT ed.nombreEdificio, p.nroPiso, SUM(h.camas) AS camas FROM edificio ed
 JOIN piso p ON ed.idEdificio = p.idEdificio
 JOIN habitacion h ON p.idPisoEdificio = h.idPisoEdificio
-GROUP BY ed.nombreEdificio
+GROUP BY ed.nombreEdificio, p.nroPiso
 HAVING SUM(h.camas) > 15;
 ```
 
 #### 9. Obtener el nombre del complejo hospitalario que tiene el mayor número de edificios.
 
 ```SQL
-SELECT c.nombreComplejo FROM complejohospitalario c
+SELECT c.nombreComplejo FROM complejoHospitalario c
 JOIN edificio e ON c.idComplejoHospitalario = e.idComplejoHospitalario
 GROUP BY c.idComplejoHospitalario
 ORDER BY COUNT(*) DESC
@@ -86,7 +87,7 @@ LIMIT 1;
 ```SQL
 SELECT e.nombreEmpleado, e.cargo, es.nombreEspecialidad  FROM empleado e
 JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
-JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
+JOIN pisoEspecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
 JOIN especialidad es ON pe.idEspecialidad = es.idEspecialidad
 WHERE p.idEdificio = 1;
 ```
@@ -116,7 +117,7 @@ WHERE (
 SELECT ed.nombreEdificio, SUM(h.camas) AS camas FROM edificio ed
 JOIN piso p ON ed.idEdificio = p.idEdificio
 JOIN habitacion h ON p.idPisoEdificio = h.idPisoEdificio
-JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
+JOIN pisoEspecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
 WHERE pe.estado = "principal" AND ed.idEdificio = 2;
 ```
 
