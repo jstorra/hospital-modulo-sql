@@ -94,10 +94,10 @@ WHERE p.idEdificio = 1;
 #### 11. Obtener el nombre y la ubicación de los pisos donde trabaja un "Fisioterapeuta".
 
 ```SQL
-SELECT ed.nombreEdificio, p.nroPiso AS ubicacion_piso FROM empleado e, piso p, edificio ed
-WHERE e.idEmpleado = p.idEmpleadoJefe
-AND p.idEdificio = ed.idEdificio
-AND e.cargo = 'fisioterapeuta';
+SELECT ed.nombreEdificio, p.nroPiso AS ubicacion_piso FROM edificio ed
+JOIN piso p ON ed.idEdificio = p.idEdificio
+JOIN empleado e ON p.idEmpleadoJefe = e.idEmpleado
+WHERE e.cargo = "fisioterapeuta";
 ```
 
 #### 12. Mostrar el nombre y el cargo de los empleados que trabajan en más de un piso. 
@@ -140,7 +140,7 @@ DROP PROCEDURE IF EXISTS asignarEmpleadoPiso //
 CREATE PROCEDURE asignarEmpleadoPiso(in idPiso INT, in idEmpleado INT)
 BEGIN
     SET @pisoExiste = (SELECT idPisoEdificio FROM piso WHERE idPisoEdificio = idPiso);
-    SET @empleadoExiste = (SELECT idEmpleado FROM empleado WHERE empleado.idEmpleado = idEmpleado);
+    SET @empleadoExiste = (SELECT idEmpleado FROM empleado e WHERE e.idEmpleado = idEmpleado);
     IF ISNULL(@pisoExiste) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'El piso no existe :(';
@@ -163,12 +163,16 @@ call asignarEmpleadoPiso(1, 1);
 ```SQL
 DELIMITER //
 DROP PROCEDURE IF EXISTS numHabitacionesPiso //
-CREATE PROCEDURE numHabitacionesPiso(
-	in idPiso INT
-)
+CREATE PROCEDURE numHabitacionesPiso(in idPiso INT)
 BEGIN
-	SELECT COUNT(*) AS habitaciones FROM habitacion
-	WHERE idPiso = habitacion.idPisoEdificio;
+    SET @pisoExiste = (SELECT idPisoEdificio FROM piso WHERE idPisoEdificio = idPiso);
+    IF ISNULL(@pisoExiste) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El piso no existe :(';
+    ELSE
+        SELECT COUNT(*) AS habitaciones FROM habitacion
+        WHERE habitacion.idPisoEdificio = idPiso;
+    END IF;
 END //
 DELIMITER ;
 call numHabitacionesPiso(3);
@@ -179,13 +183,21 @@ call numHabitacionesPiso(3);
 ```SQL
 DELIMITER //
 DROP PROCEDURE IF EXISTS nuevaUbicacionPiso //
-CREATE PROCEDURE nuevaUbicacionPiso(
-	in idPiso INT,
-    in ubicacion INT
-)
+CREATE PROCEDURE nuevaUbicacionPiso(in idPiso INT, in ubicacion INT)
 BEGIN
-	UPDATE piso SET nroPiso = ubicacion WHERE idPisoEdificio = idPiso;
-    SELECT * FROM piso;
+    SET @pisoExiste = (SELECT idPisoEdificio FROM piso WHERE idPisoEdificio = idPiso);
+    IF ISNULL(@pisoExiste) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El piso no existe :(';
+    ELSE
+        IF ubicacion <= 0 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'La ubicación no es válida :(';
+        ELSE
+            UPDATE piso SET nroPiso = ubicacion WHERE idPisoEdificio = idPiso;
+            SELECT * FROM piso;
+        END IF;
+    END IF;
 END //
 DELIMITER ;
 call nuevaUbicacionPiso(3, 1);
@@ -196,12 +208,16 @@ call nuevaUbicacionPiso(3, 1);
 ```SQL
 DELIMITER //
 DROP PROCEDURE IF EXISTS eliminacionEmpleadoPiso //
-CREATE PROCEDURE eliminacionEmpleadoPiso(
-	in idPiso INT
-)
+CREATE PROCEDURE eliminacionEmpleadoPiso(in idPiso INT)
 BEGIN
-	UPDATE piso SET idEmpleadoJefe = NULL WHERE idPisoEdificio = idPiso;
-    SELECT * FROM piso;
+    SET @pisoExiste = (SELECT idPisoEdificio FROM piso WHERE idPisoEdificio = idPiso);
+    IF ISNULL(@pisoExiste) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El piso no existe :(';
+    ELSE
+        UPDATE piso SET idEmpleadoJefe = NULL WHERE idPisoEdificio = idPiso;
+        SELECT * FROM piso;
+    END IF;
 END //
 DELIMITER ;
 call eliminacionEmpleadoPiso(3);
@@ -214,15 +230,20 @@ call eliminacionEmpleadoPiso(3);
     ```SQL
     DELIMITER //
     DROP PROCEDURE IF EXISTS empleadosSegunEspecialidad //
-    CREATE PROCEDURE empleadosSegunEspecialidad(
-        in especialidad VARCHAR(50)
-    )
+    CREATE PROCEDURE empleadosSegunEspecialidad(in especialidad VARCHAR(50))
     BEGIN
-        SELECT e.* FROM empleado e
-        JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
-        JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
-        JOIN especialidad es ON pe.idEspecialidad = es.idEspecialidad
-        WHERE es.nombreEspecialidad = especialidad;
+        SET @especialidadExiste = (SELECT idEspecialidad FROM especialidad
+                                   WHERE nombreEspecialidad = especialidad);
+        IF ISNULL(@especialidadExiste) THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'La especialidad no existe :(';
+        ELSE
+            SELECT e.* FROM empleado e
+            JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
+            JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
+            JOIN especialidad es ON pe.idEspecialidad = es.idEspecialidad
+            WHERE es.nombreEspecialidad = especialidad;
+        END IF;
     END //
     DELIMITER ;
     call empleadosSegunEspecialidad("Medicina de Precisión y Genómica");
@@ -233,14 +254,19 @@ call eliminacionEmpleadoPiso(3);
     ```SQL
     DELIMITER //
     DROP PROCEDURE IF EXISTS empleadosSegunEspecialidad //
-    CREATE PROCEDURE empleadosSegunEspecialidad(
-        in idEspecialidad INT
-    )
+    CREATE PROCEDURE empleadosSegunEspecialidad(in idEspecialidad INT)
     BEGIN
-        SELECT e.* FROM empleado e
-        JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
-        JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
-        WHERE pe.idEspecialidad = idEspecialidad;
+        SET @especialidadExiste = (SELECT e.idEspecialidad FROM especialidad e
+                                   WHERE e.idEspecialidad = idEspecialidad);
+        IF ISNULL(@especialidadExiste) THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'La especialidad no existe :(';
+        ELSE
+            SELECT e.* FROM empleado e
+            JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
+            JOIN pisoespecialidad pe ON p.idPisoEdificio = pe.idPisoEdificio
+            WHERE pe.idEspecialidad = idEspecialidad;
+        END IF;
     END //
     DELIMITER ;
     call empleadosSegunEspecialidad(6);
@@ -253,13 +279,18 @@ call eliminacionEmpleadoPiso(3);
     ```SQL
     DELIMITER //
     DROP PROCEDURE IF EXISTS numEdificiosComplejo //
-    CREATE PROCEDURE numEdificiosComplejo(
-        in complejo VARCHAR(50)
-    )
+    CREATE PROCEDURE numEdificiosComplejo(in complejo VARCHAR(50))
     BEGIN
-        SELECT COUNT(*) AS edificios FROM edificio e
-        JOIN complejohospitalario ch ON e.idComplejoHospitalario = ch.idComplejoHospitalario
-        WHERE ch.nombreComplejo = complejo;
+        SET @complejoExiste = (SELECT idComplejoHospitalario FROM complejohospitalario
+                               WHERE nombreComplejo = complejo);
+        IF ISNULL(@complejoExiste) THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El complejo hospitalario no existe :(';
+        ELSE
+            SELECT COUNT(*) AS edificios FROM edificio e
+            JOIN complejohospitalario ch ON e.idComplejoHospitalario = ch.idComplejoHospitalario
+            WHERE ch.nombreComplejo = complejo;
+        END IF;
     END //
     DELIMITER ;
     call numEdificiosComplejo("Vitality Health Village");
@@ -270,12 +301,17 @@ call eliminacionEmpleadoPiso(3);
     ```SQL
     DELIMITER //
     DROP PROCEDURE IF EXISTS numEdificiosComplejo //
-    CREATE PROCEDURE numEdificiosComplejo(
-        in idComplejo INT
-    )
+    CREATE PROCEDURE numEdificiosComplejo(in idComplejo INT)
     BEGIN
-        SELECT COUNT(*) AS edificios FROM edificio
-        WHERE edificio.idComplejoHospitalario = idComplejo;
+        SET @complejoExiste = (SELECT idComplejoHospitalario FROM complejohospitalario
+                               WHERE idComplejoHospitalario = idComplejo);
+        IF ISNULL(@complejoExiste) THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El complejo hospitalario no existe :(';
+        ELSE
+            SELECT COUNT(*) AS edificios FROM edificio
+            WHERE edificio.idComplejoHospitalario = idComplejo;
+        END IF;
     END //
     DELIMITER ;
     call numEdificiosComplejo(6);
@@ -286,13 +322,17 @@ call eliminacionEmpleadoPiso(3);
 ```SQL
 DELIMITER //
 DROP PROCEDURE IF EXISTS pisosCargoEmpleado //
-CREATE PROCEDURE pisosCargoEmpleado(
-	in cargo VARCHAR(50)
-)
+CREATE PROCEDURE pisosCargoEmpleado(in cargo VARCHAR(50))
 BEGIN
-	SELECT p.* FROM piso p
-	JOIN empleado e ON p.idEmpleadoJefe = e.idEmpleado
-	WHERE e.cargo = cargo;
+    SET @cargoExiste = (SELECT COUNT(*) FROM empleado e WHERE e.cargo = cargo);
+    IF @cargoExiste < 1 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El cargo no existe :(';
+    ELSE
+        SELECT p.* FROM piso p
+        JOIN empleado e ON p.idEmpleadoJefe = e.idEmpleado
+        WHERE e.cargo = cargo;
+    END IF;
 END //
 DELIMITER ;
 call pisosCargoEmpleado("Pediatra");
@@ -303,15 +343,29 @@ call pisosCargoEmpleado("Pediatra");
 ```SQL
 DELIMITER //
 DROP PROCEDURE IF EXISTS asignarEspecialidadPiso //
-CREATE PROCEDURE asignarEspecialidadPiso(
-	in estado VARCHAR(10),
-	in idPiso INT,
-	in idEspecialidad INT
-)
+CREATE PROCEDURE asignarEspecialidadPiso(in estado VARCHAR(10), in idPiso INT, in idEspecialidad INT)
 BEGIN
-	UPDATE pisoespecialidad pe SET pe.idEspecialidad = idEspecialidad
-    WHERE pe.estado = estado AND pe.idPisoEdificio = idPiso;
-    SELECT * FROM pisoespecialidad;
+    SET @pisoExiste = (SELECT idPisoEdificio FROM piso WHERE idPisoEdificio = idPiso);
+    SET @especialidadExiste = (SELECT e.idEspecialidad FROM especialidad e
+                               WHERE e.idEspecialidad = idEspecialidad);
+    IF LOWER(estado) != 'principal' AND LOWER(estado) != 'secundario' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El estado no es válido :(';
+    ELSE
+        IF ISNULL(@pisoExiste) THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El piso no existe :(';
+        ELSE
+            IF ISNULL(@especialidadExiste) THEN
+                SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'La especialidad no existe :(';
+            ELSE
+                UPDATE pisoespecialidad pe SET pe.idEspecialidad = idEspecialidad
+                WHERE pe.estado = estado AND pe.idPisoEdificio = idPiso;
+                SELECT * FROM pisoespecialidad;
+            END IF;
+        END IF;
+    END IF;
 END //
 DELIMITER ;
 call asignarEspecialidadPiso("principal", 1, 1);
@@ -324,9 +378,10 @@ DELIMITER //
 DROP PROCEDURE IF EXISTS empleadosSinPiso //
 CREATE PROCEDURE empleadosSinPiso()
 BEGIN
-	SELECT e.* FROM empleado e
-	LEFT JOIN piso p ON e.idEmpleado = p.idEmpleadoJefe
-    WHERE p.idEmpleadoJefe IS NULL;
+    SELECT * FROM empleado WHERE idEmpleado NOT IN (
+        SELECT idEmpleadoJefe FROM piso
+        WHERE empleado.idEmpleado = piso.idEmpleadoJefe
+    );
 END //
 DELIMITER ;
 call empleadosSinPiso();
@@ -341,7 +396,7 @@ call empleadosSinPiso();
 Clona este repositorio en tu maquina local:
 
 ```BASH
-git clone https://github.com/jstorra/hospital-SQL.git
+git clone https://github.com/jstorra/hospital-modulo-sql.git
 ```
 
 ---
