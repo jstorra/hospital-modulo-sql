@@ -1,7 +1,7 @@
-DROP DATABASE IF EXISTS db_hospital;
+DROP DATABASE IF EXISTS hospital_modulo;
 
-CREATE DATABASE db_hospital;
-USE db_hospital;
+CREATE DATABASE hospital_modulo;
+USE hospital_modulo;
 
 CREATE TABLE complejoHospitalario (
   idComplejoHospitalario INT PRIMARY KEY AUTO_INCREMENT,
@@ -58,51 +58,52 @@ ALTER TABLE piso ADD CONSTRAINT fk_empleado_piso FOREIGN KEY (idEmpleadoJefe) RE
 ALTER TABLE habitacion ADD CONSTRAINT fk_piso_habitacion FOREIGN KEY (idPisoEdificio) REFERENCES piso (idPisoEdificio);
 
 INSERT INTO complejoHospitalario (nombreComplejo) VALUES
-('Amet Industries'),
-('Rhoncus Donec Inc.'),
-('Sit Amet Foundation'),
-('Mauris Aliquam Incorporated'),
-('Nisi A Associates'),
-('Ultrices Posuere Consulting'),
-('Nisi Nibh Ltd'),
-('In Faucibus Corporation'),
-('Laoreet Libero Et Associates'),
-('At Arcu Industries');
+('Salud Integral Medical Center'),
+('Esperanza Wellness Campus'),
+('VidaCare Health Hub'),
+('Serenity Medical Plaza'),
+('Renacer Hospital Complex'),
+('Vitality Health Village'),
+('Compassion Care Campus'),
+('Harmony Medical Haven'),
+('Prospera Health Center'),
+('Equilibrio Life Campus');
 
 INSERT INTO edificio (idComplejoHospitalario,nombreEdificio) VALUES
-(1,'Yunnan'),
-(6,'Chungju'),
-(7,'Pottsching'),
-(10,'Berlin'),
-(6,'Macclesfield'),
-(5,'Florencia'),
-(9,'Goksun'),
-(6,'Uyo'),
-(4,'Marina South'),
-(4,'Miraflores');
+(1,'Torre Ébano'),
+(6,'Edificio Azahar'),
+(7,'Pabellón Diamante'),
+(10,'Bloque Esmeralda'),
+(6,'Centro Zafiro'),
+(5,'Ala Coral'),
+(9,'Torre Ópalo'),
+(6,'Edificio Amatista'),
+(4,'Pabellón Rubí'),
+(4,'Bloque Topacio');
 
 INSERT INTO especialidad (nombreEspecialidad) VALUES
-('Cardiología'),
-('Dermatología'),
-('Neurología'),
-('Gastroenterología'),
-('Oftalmología'),
-('Ortopedia'),
-('Pediatría'),
-('Psiquiatría'),
-('Radiología'),
-('Urología');
+('Cardiología Avanzada'),
+('Neurociencias y Rehabilitación'),
+('Oncología Integrativa'),
+('Cirugía Minimamente Invasiva'),
+('Salud Materno-Infantil'),
+('Medicina de Precisión y Genómica'),
+('Cuidados Intensivos y Trauma'),
+('Reumatología y Enfermedades Autoinmunes'),
+('Salud Mental y Bienestar Emocional'),
+('Medicina Geriátrica y Cuidados Paliativos');
 
 INSERT INTO empleado (nombreEmpleado, cargo) VALUES
-('Juan Pérez', 'Médico General'),
-('María García', 'Enfermera'),
-('Carlos Rodríguez', 'Especialista en Cardiología'),
-('Laura Martínez', 'Técnico de Laboratorio'),
-('Pedro Sánchez', 'Administrativo'),
-('Ana López', 'Fisioterapeuta'),
-('José Ramírez', 'Farmacéutico'),
-('Isabel Fernández', 'Radiólogo'),
-('Miguel Torres', 'Asistente de Recursos Humanos');
+('Luis González', 'Pediatra'),
+('Patricia Herrera', 'Terapeuta Ocupacional'),
+('Roberto Vargas', 'Especialista en Neurología'),
+('Verónica Silva', 'Fisioterapeuta'),
+('Javier Mendoza', 'Coordinador de Logística Médica'),
+('Alejandra Ramírez', 'Psicólogo Clínico'),
+('Daniel Cordero', 'Técnico de Imagenología'),
+('Silvia Ortega', 'Especialista en Infectología'),
+('Ricardo Morales', 'Gerente de Finanzas'),
+('Carmen Núñez', 'Enfermero Jefe');
 
 INSERT INTO piso (idEdificio, nroPiso, idEmpleadoJefe) VALUES
 (1, 1, 1),
@@ -133,4 +134,4 @@ INSERT INTO habitacion (idPisoEdificio, camas) VALUES
 (2, 3),
 (2, 2),
 (3, 4),
-(3, 1);
+(3, 1); 
